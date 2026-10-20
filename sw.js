@@ -1,4 +1,4 @@
-const CACHE_NAME = "st-josephs-faith-shell-v4";
+const CACHE_NAME = "st-josephs-faith-shell-v5";
 const APP_SHELL = ["./", "./index.html", "./manifest.webmanifest", "./midalam-logo.png"];
 
 self.addEventListener("install", event => {

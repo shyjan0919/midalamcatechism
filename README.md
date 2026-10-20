@@ -1,23 +1,19 @@
-St. Joseph's Faith — Admin foundation (early build)
+St. Joseph's Faith — Teacher Profile Module (early build)
 
-Upload these files to the ROOT of the GitHub Pages repository:
+Replace these files in the ROOT of the GitHub Pages repository:
 - index.html
-- sw.js
+- sw.js (cache version may be updated below)
 - manifest.webmanifest
 - midalam-logo.png
 
-firestore.rules is provided separately for publishing in Firebase Console > Firestore Database > Rules.
+Publish firestore.rules in Firebase Console > Firestore Database > Rules.
 
-IMPORTANT: Do not publish the rules until the first admin profile is seeded:
-1. Firebase Console > Authentication > Users > open your admin user and copy the UID.
-2. Firestore Database > Data > Start collection:
-   Collection ID: users
-   Document ID: paste that exact Authentication UID
-   Field: role (string) = admin
-   Optional field: email (string) = your account email
-3. After the document exists, publish firestore.rules from this package.
-4. Refresh/sign out and sign back in. The badge should say ADMIN and Admin navigation should appear.
+This module adds teacher profile records (name, email, one assigned class/group) to Firestore. It does NOT create Firebase Authentication accounts, send invitations, or grant teacher access to student records. Do not treat a saved teacher profile as an authorized login.
 
-The first admin document must be created manually in Firebase Console because the client must not be allowed to promote itself. Never create a public rule that allows anyone to write users/{uid} or set role=admin.
+Security setup already assumed:
+- A Firestore document users/{your Firebase Auth UID} exists with role="admin".
+- The published rules verify admin role using that document.
+- Only admins can read/write teacher profiles and manage classes.
+- All other collections remain denied.
 
-This build adds admin-role lookup and basic class record create/list functionality. It does NOT yet implement student records, teacher creation/assignment, attendance, QR scanning, geofence enforcement, leave approvals, or live reports. Keep student data out of the app until those collections have dedicated tested rules.
+After publishing rules and uploading files, sign in as admin, open Teachers, add a test profile, then verify it appears in Registered teacher profiles. Do not enter passwords into the teacher form.

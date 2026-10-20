@@ -56,7 +56,25 @@
   </section>
   <section class="screen" id="attendance"><div class="card"><h3>QR attendance</h3><p class="small muted">The live version will scan unique student cards, validate teacher/class/session/location and prevent duplicate scans.</p><div class="formrow"><div><label>Class</label><select class="classSelect"></select></div><div><label>Session</label><select><option>Sunday Catechism</option><option>Special class</option></select></div></div><button class="full" id="scanBtn">Open scanner preview</button><button class="full secondary" id="gpsBtn">Check device location</button><p class="small muted" id="gpsStatus">Location not checked.</p></div></section>
   <section class="screen" id="students"><div class="card"><h3>Student profiles & QR ID cards</h3><p class="small muted">Class-wise profiles, parent/guardian contacts, birthday, student ID and printable QR cards will be connected to Firestore.</p><label>Search student</label><input placeholder="Student name or ID"><label>Class</label><select class="classSelect"></select><div class="item"><b>Student profile preview</b><p class="small muted">Student ID · Name · Class · Parent contact · Birthday · QR ID card</p></div><p class="small muted">Use fictional data until database security has been tested.</p></div></section>
-  <section class="screen" id="teachers"><div class="card"><h3>Teachers & class assignments</h3><p class="small muted">Admin will authorize teacher accounts and assign each teacher to a class. Teacher access will be restricted by Firestore security rules.</p><div class="item"><b>Administrator</b><p class="small muted">All-class administration</p></div><div class="item"><b>Teacher</b><p class="small muted">Assigned class only, with permitted aggregate reports</p></div></div></section>
+  <section class="screen" id="teachers">
+   <div class="card">
+    <h3>Teacher Management</h3>
+    <p class="small muted">Add teacher details and class assignments. This module stores teacher profile records only; it does not create Firebase Authentication accounts or send invitations.</p>
+    <p id="teacherStatus" class="small muted">Checking administrator access…</p>
+   </div>
+   <div class="card">
+    <h3>Add teacher profile</h3>
+    <label>Teacher full name</label><input id="teacherName" maxlength="100" placeholder="Enter teacher name">
+    <label>Teacher email</label><input id="teacherEmail" type="email" maxlength="160" placeholder="teacher@example.com">
+    <label>Assigned class/group</label><select id="teacherClass"></select>
+    <button class="full" id="saveTeacherBtn">Save teacher profile</button>
+    <p class="small muted">Use the teacher's real email address. Never enter passwords here. Firebase account creation will be handled separately by the administrator.</p>
+   </div>
+   <div class="card">
+    <h3>Registered teacher profiles</h3>
+    <div id="teacherList" class="small muted">No teacher profiles loaded.</div>
+   </div>
+  </section>
   <section class="screen" id="leave"><div class="card"><h3>Leave & substitutes</h3><p class="small muted">Teachers request leave; admin approves or rejects and assigns a substitute for a class and date.</p><label>Leave date</label><input type="date" id="leaveDate"><label>Class</label><select class="classSelect"></select><label>Reason</label><textarea id="leaveReason" rows="3" placeholder="Reason for leave"></textarea><button class="full" id="leaveBtn">Preview leave request</button><p id="leaveResult" class="small muted"></p></div></section>
   <section class="screen" id="reports"><div class="card"><h3>Attendance reports & exports</h3><p class="small muted">Daily/monthly summaries, absence history, and class comparisons will use authorized records from the database.</p><button id="exportBtn">Export sample CSV</button></div></section>
   <section class="screen" id="certificates"><div class="card"><h3>Certificates</h3><label>Student name</label><input id="certName" placeholder="Sample student name"><label>Certificate title</label><input id="certTitle" value="Certificate of Achievement"><button class="full" id="certBtn">Create certificate preview</button><div id="certPreview"></div></div></section>
@@ -76,7 +94,7 @@ import {
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, collection, getDocs, setDoc, serverTimestamp
+  getFirestore, doc, getDoc, collection, getDocs, setDoc, serverTimestamp, query, orderBy
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -117,6 +135,8 @@ async function showApp(user){
       document.getElementById('adminRoleStatus').textContent =
         "Administrator role verified by Firestore. You can manage class records below.";
       await loadClasses();
+      await loadTeacherClasses();
+      await loadTeachers();
     }
   } catch (error) {
     currentUserRole = "unassigned";
@@ -147,6 +167,78 @@ async function loadClasses(){
     console.error('Load classes failed:', error.code || error);
   }
 }
+
+async function loadTeacherClasses(){
+  const select = document.getElementById('teacherClass');
+  if (!select) return;
+  select.innerHTML = '';
+  try {
+    const snap = await getDocs(collection(db, 'classes'));
+    const docs = snap.docs.sort((a,b)=>(a.data().name||'').localeCompare(b.data().name||''));
+    docs.forEach(d => {
+      const option = document.createElement('option');
+      option.value = d.id;
+      option.textContent = d.data().name || d.id;
+      select.appendChild(option);
+    });
+    if (!docs.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Create classes first';
+      select.appendChild(option);
+    }
+  } catch (error) {
+    document.getElementById('teacherStatus').textContent = 'Could not load class list. Check Firestore rules.';
+  }
+}
+async function loadTeachers(){
+  if (currentUserRole !== 'admin') return;
+  const list = document.getElementById('teacherList');
+  const status = document.getElementById('teacherStatus');
+  list.textContent = 'Loading teacher profiles…';
+  try {
+    const snap = await getDocs(collection(db, 'teachers'));
+    if (snap.empty) { list.textContent = 'No teacher profiles added yet.'; return; }
+    list.innerHTML = '';
+    snap.docs.sort((a,b)=>(a.data().name||'').localeCompare(b.data().name||'')).forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'item';
+      const name = document.createElement('b'); name.textContent = d.data().name || 'Unnamed teacher';
+      const details = document.createElement('p');
+      details.className = 'small muted';
+      details.textContent = `${d.data().email || ''} · ${d.data().className || d.data().classId || ''}`;
+      row.append(name, details); list.appendChild(row);
+    });
+  } catch (error) {
+    list.textContent = 'Unable to load teacher profiles. Publish the updated rules first.';
+    status.textContent = 'Teacher profile access is not enabled in the current Firestore rules.';
+    console.error('Load teachers failed:', error.code || error);
+  }
+}
+document.getElementById('saveTeacherBtn').addEventListener('click', async () => {
+  if (currentUserRole !== 'admin' || !auth.currentUser) { toast('Administrator permission is required.'); return; }
+  const name = document.getElementById('teacherName').value.trim();
+  const email = document.getElementById('teacherEmail').value.trim().toLowerCase();
+  const select = document.getElementById('teacherClass');
+  const classId = select.value;
+  const className = select.options[select.selectedIndex]?.textContent || '';
+  if (!name || !email || !classId) { toast('Enter teacher name, email, and class.'); return; }
+  const teacherId = email.replace(/[.#$\\[\\]\\/]/g, '_');
+  try {
+    await setDoc(doc(db, 'teachers', teacherId), {
+      name, email, classId, className, active: true,
+      createdAt: serverTimestamp(), createdBy: auth.currentUser.uid
+    });
+    document.getElementById('teacherName').value = '';
+    document.getElementById('teacherEmail').value = '';
+    toast('Teacher profile saved.');
+    await loadTeachers();
+  } catch (error) {
+    toast('Could not save teacher profile. Check Firestore rules.');
+    console.error('Save teacher failed:', error.code || error);
+  }
+});
+
 document.getElementById('saveClassBtn').addEventListener('click', async () => {
   if (currentUserRole !== 'admin' || !auth.currentUser) { toast('Administrator permission is required.'); return; }
   const name = document.getElementById('newClassName').value.trim();
@@ -165,8 +257,8 @@ document.getElementById('saveClassBtn').addEventListener('click', async () => {
     console.error('Save class failed:', error.code || error);
   }
 });
-function go(id){if(id==='admin' && currentUserRole!=='admin'){toast('Administrator permission is required.');id='dashboard'}currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
-function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>{b.onclick=()=>go(b.dataset.page);if(b.dataset.page==='admin' && currentUserRole!=='admin')b.classList.add('hidden')})}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
+function go(id){if((id==='admin' || id==='teachers') && currentUserRole!=='admin'){toast('Administrator permission is required.');id='dashboard'}currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
+function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>{b.onclick=()=>go(b.dataset.page);if((b.dataset.page==='admin' || b.dataset.page==='teachers') && currentUserRole!=='admin')b.classList.add('hidden')})}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
 
 document.getElementById('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
