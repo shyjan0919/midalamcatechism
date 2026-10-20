@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "St. Joseph's Faith",
+  "short_name": "Joseph's Faith",
+  "description": "St. Joseph's Catechism Portal, Midalam",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f7f2",
+  "theme_color": "#124b2b",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "./midalam-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

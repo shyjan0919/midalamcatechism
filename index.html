@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<meta name="description" content="St. Joseph's Faith — St. Joseph's Catechism, Midalam">
+<title>St. Joseph's Faith · Midalam</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./midalam-logo.png" type="image/png">
+<style>
+:root{--green:#124b2b;--green2:#176538;--gold:#d4ac50;--cream:#fffaf0;--bg:#f3f7f2;--ink:#19251d;--muted:#657267;--line:#e0e8e0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}button,input,select,textarea{font:inherit}button{border:0;border-radius:12px;padding:12px 15px;background:var(--green);color:white;font-weight:700;cursor:pointer}button.secondary{background:#e8f0e7;color:var(--green)}input,select,textarea{width:100%;padding:12px;border:1px solid #ccd8ce;border-radius:11px;background:white;color:var(--ink)}label{display:block;margin:13px 0 6px;color:var(--muted);font-size:12px;font-weight:750}.hidden{display:none!important}.login{min-height:100svh;padding:20px;display:grid;place-items:center;background:radial-gradient(ellipse at top,#276c3d 0,#124b2b 58%,#092d19 100%)}.login-card{width:min(420px,100%);margin:auto;padding:24px;background:#fff;border:1px solid #e5d6a6;border-radius:24px;box-shadow:0 24px 65px #00180d55;overflow:hidden}.crest{display:block;width:116px;height:116px;max-width:100%;object-fit:contain;object-position:center;margin:0 auto 12px}.login-title{text-align:center;margin:0;color:var(--green);font-family:Georgia,serif;font-size:25px}.login-place{text-align:center;color:var(--muted);font-size:12px;margin:6px 0 22px}.login-card h2{font-size:20px;margin:0 0 5px}.login-card .intro{font-size:13px;color:var(--muted);margin:0}.full{width:100%;margin-top:16px}.hint{background:#f3f7f1;color:#5d6c60;border-radius:10px;padding:10px;margin-top:13px;font-size:11px;line-height:1.5}.top{background:linear-gradient(105deg,#0c3820,#176538);color:white;padding:13px max(14px,calc((100vw - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 3px 14px #123b2018}.brand{display:flex;align-items:center;gap:10px;min-width:0}.brand img{width:44px;height:44px;flex:0 0 44px;object-fit:contain;border-radius:9px;background:#fff}.brand strong{display:block;font-size:15px}.brand small{display:block;color:#dbe9dc;font-size:11px;margin-top:3px}.top button{background:#ffffff20;border:1px solid #ffffff40;padding:9px 12px}.layout{max-width:1120px;margin:auto;padding:16px 16px 90px}.welcome{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 15px}.welcome h2{font-size:24px;margin:0}.welcome p{font-size:13px;color:var(--muted);margin:5px 0 0}.role{background:#e3f2e5;color:var(--green);font-size:10px;font-weight:850;padding:6px 10px;border-radius:99px}.notice{padding:11px 13px;border:1px solid #eed99f;background:#fff8e4;color:#604e1b;border-radius:12px;font-size:12px;line-height:1.5;margin-bottom:14px}.nav{display:flex;gap:7px;overflow:auto;padding:0 0 13px;scrollbar-width:thin}.nav button{white-space:nowrap;background:#e6eee5;color:#35513b;padding:10px 12px;font-size:12px}.nav button.active{background:var(--green);color:white}.screen{display:none}.screen.active{display:block}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 3px 10px #183b2106}.statlabel{font-size:12px;color:var(--muted)}.statnum{font-size:26px;font-weight:850;margin:6px 0}.small{font-size:12px;line-height:1.5}.muted{color:var(--muted)}.actionrow{display:flex;gap:8px;flex-wrap:wrap}.actionrow button{flex:1;min-width:125px}.item{padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.formrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}.footer{text-align:center;color:#829087;font-size:11px;padding:20px}.bottomnav{display:none}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:20;background:#102f1b;color:white;border-radius:12px;padding:12px 16px;max-width:90%;font-size:13px;box-shadow:0 8px 28px #0003}.certificate{border:4px double var(--gold);text-align:center;padding:20px;background:var(--cream);margin-top:14px}.certificate img{width:68px;height:68px;object-fit:contain}.certificate h2{font-family:Georgia,serif;color:var(--green)}
+@media(max-width:650px){.login{padding:14px}.login-card{padding:20px;border-radius:21px}.crest{width:100px;height:100px}.login-title{font-size:23px}.top{padding:11px 13px}.brand img{width:38px;height:38px;flex-basis:38px}.brand strong{font-size:13px}.brand small{font-size:10px}.layout{padding:13px 12px 92px}.welcome h2{font-size:21px}.stats{gap:7px}.card{padding:12px}.statnum{font-size:22px}.formrow{grid-template-columns:1fr}.nav{display:none}.bottomnav{position:fixed;z-index:10;left:0;right:0;bottom:0;display:flex;gap:4px;overflow:auto;padding:8px max(6px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 18px #183b210b}.bottomnav button{flex:1;min-width:65px;background:transparent;color:#546358;font-size:10px;padding:8px 5px;white-space:nowrap}.bottomnav button.active{background:#e5f2e6;color:var(--green)}}
+</style>
+</head>
+<body>
+<section class="login" id="loginScreen">
+ <form class="login-card" id="loginForm">
+  <img class="crest" src="./midalam-logo.png" alt="St. Joseph's Catechism Portal crest">
+  <h1 class="login-title">St. Joseph’s Faith</h1>
+  <p class="login-place">ST. JOSEPH’S CATECHISM · MIDALAM</p>
+  <h2>Welcome back</h2><p class="intro">Sign in to continue to your account.</p>
+  <label for="email">Email address</label><input id="email" type="email" autocomplete="username" placeholder="Registered email address" required>
+  <label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password" required>
+  <button class="full" type="submit">Sign in</button>
+  <button class="full secondary" type="button" id="forgotBtn">Forgot password?</button>
+  <p class="hint"><b>Firebase sign-in enabled.</b> Use an account created by the administrator. Student records, class permissions, QR attendance and reports are not connected yet.</p>
+ </form>
+</section>
+<div id="app" class="hidden">
+ <header class="top"><div class="brand"><img src="./midalam-logo.png" alt="St. Joseph's Faith crest"><div><strong>St. Joseph’s Faith</strong><small>St. Joseph’s Catechism · Midalam</small></div></div><button id="accountBtn">Account</button></header>
+ <main class="layout">
+  <div class="welcome"><div><h2 id="pageTitle">Dashboard</h2><p id="welcomeText">Learn in Faith. Grow in Christ.</p></div><span class="role" id="roleBadge">PREVIEW</span></div>
+  <div class="notice"><b>Early build:</b> Firebase email/password sign-in is connected. Role-based permissions and database features are not finished. Do not enter real student information until security rules and access controls are tested.</div>
+  <nav class="nav" id="desktopNav"></nav>
+  <section class="screen active" id="dashboard">
+   <div class="stats"><div class="card"><div class="statlabel">Classes</div><div class="statnum">13</div><div class="small muted">Class 1–Class 13</div></div><div class="card"><div class="statlabel">Students</div><div class="statnum">400</div><div class="small muted">Planning estimate</div></div><div class="card"><div class="statlabel">Attendance</div><div class="statnum">—</div><div class="small muted">Connect database for live data</div></div></div>
+   <div class="card"><h3>Quick actions</h3><div class="actionrow"><button data-open="attendance">QR attendance</button><button class="secondary" data-open="students">Student profiles</button><button class="secondary" data-open="reports">Reports</button></div></div>
+   <div class="card"><h3>Welcome to St. Joseph’s Faith</h3><p class="small muted">A digital home for catechism attendance, student records, teacher coordination, and parish activities.</p><div class="item"><b>Learn in Faith. Grow in Christ.</b><p class="small muted">St. Joseph’s Catechism · Midalam</p></div></div>
+  </section>
+  <section class="screen" id="attendance"><div class="card"><h3>QR attendance</h3><p class="small muted">The live version will scan unique student cards, validate teacher/class/session/location and prevent duplicate scans.</p><div class="formrow"><div><label>Class</label><select class="classSelect"></select></div><div><label>Session</label><select><option>Sunday Catechism</option><option>Special class</option></select></div></div><button class="full" id="scanBtn">Open scanner preview</button><button class="full secondary" id="gpsBtn">Check device location</button><p class="small muted" id="gpsStatus">Location not checked.</p></div></section>
+  <section class="screen" id="students"><div class="card"><h3>Student profiles & QR ID cards</h3><p class="small muted">Class-wise profiles, parent/guardian contacts, birthday, student ID and printable QR cards will be connected to Firestore.</p><label>Search student</label><input placeholder="Student name or ID"><label>Class</label><select class="classSelect"></select><div class="item"><b>Student profile preview</b><p class="small muted">Student ID · Name · Class · Parent contact · Birthday · QR ID card</p></div><p class="small muted">Use fictional data until database security has been tested.</p></div></section>
+  <section class="screen" id="teachers"><div class="card"><h3>Teachers & class assignments</h3><p class="small muted">Admin will authorize teacher accounts and assign each teacher to a class. Teacher access will be restricted by Firestore security rules.</p><div class="item"><b>Administrator</b><p class="small muted">All-class administration</p></div><div class="item"><b>Teacher</b><p class="small muted">Assigned class only, with permitted aggregate reports</p></div></div></section>
+  <section class="screen" id="leave"><div class="card"><h3>Leave & substitutes</h3><p class="small muted">Teachers request leave; admin approves or rejects and assigns a substitute for a class and date.</p><label>Leave date</label><input type="date" id="leaveDate"><label>Class</label><select class="classSelect"></select><label>Reason</label><textarea id="leaveReason" rows="3" placeholder="Reason for leave"></textarea><button class="full" id="leaveBtn">Preview leave request</button><p id="leaveResult" class="small muted"></p></div></section>
+  <section class="screen" id="reports"><div class="card"><h3>Attendance reports & exports</h3><p class="small muted">Daily/monthly summaries, absence history, and class comparisons will use authorized records from the database.</p><button id="exportBtn">Export sample CSV</button></div></section>
+  <section class="screen" id="certificates"><div class="card"><h3>Certificates</h3><label>Student name</label><input id="certName" placeholder="Sample student name"><label>Certificate title</label><input id="certTitle" value="Certificate of Achievement"><button class="full" id="certBtn">Create certificate preview</button><div id="certPreview"></div></div></section>
+  <section class="screen" id="birthdays"><div class="card"><h3>Birthday reminders</h3><p class="small muted">Upcoming birthdays will appear here once authorized student profiles are connected.</p><p>No birthday data loaded in this preview.</p></div></section>
+ </main>
+ <nav class="bottomnav" id="mobileNav"></nav>
+ <div class="footer">St. Joseph’s Faith · St. Joseph’s Catechism · Midalam</div>
+</div>
+<div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA63biPdl_I_RuNJKTHBn7BjNLt6JEieTs",
+  authDomain: "st-josephs-faith-24811.firebaseapp.com",
+  projectId: "st-josephs-faith-24811",
+  storageBucket: "st-josephs-faith-24811.firebasestorage.app",
+  messagingSenderId: "420527444779",
+  appId: "1:420527444779:web:24211fe10aa389f598eb6e"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const classNames=Array.from({length:13},(_,i)=>'Class '+(i+1));
+document.querySelectorAll('.classSelect').forEach(s=>s.innerHTML=classNames.map(c=>`<option>${c}</option>`).join(''));
+const navItems=[['dashboard','Home','⌂'],['attendance','Attendance','✓'],['students','Students','♙'],['leave','Leave','◷'],['reports','Reports','▤'],['certificates','Awards','✦'],['birthdays','Birthdays','♡'],['teachers','Teachers','♧']];
+let currentScreen='dashboard';
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),4500)}
+function showLogin(){document.getElementById('loginScreen').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
+function showApp(user){document.getElementById('loginScreen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('roleBadge').textContent='SIGNED IN';document.getElementById('welcomeText').textContent=user?.email ? `Signed in as ${user.email}` : 'Welcome to St. Joseph’s Faith · Midalam';go('dashboard')}
+function go(id){currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
+function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.page))}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
+
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value;
+  const submit=e.currentTarget.querySelector('button[type="submit"]');
+  submit.disabled=true;submit.textContent='Signing in…';
+  try { await signInWithEmailAndPassword(auth,email,password); }
+  catch(error){
+    let msg='Sign-in failed. Please check your email and password.';
+    if(['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-email'].includes(error.code)) msg='Email or password is incorrect.';
+    else if(error.code==='auth/too-many-requests') msg='Too many attempts. Please wait and try again later.';
+    else if(error.code==='auth/network-request-failed') msg='Network error. Check your internet connection.';
+    else if(error.code==='auth/operation-not-allowed') msg='Email/Password sign-in is not enabled in Firebase.';
+    toast(msg); console.error('Firebase sign-in error:',error.code);
+  } finally {submit.disabled=false;submit.textContent='Sign in';}
+});
+document.getElementById('forgotBtn').onclick=async()=>{
+  const email=document.getElementById('email').value.trim();
+  if(!email){toast('Enter your registered email address first.');document.getElementById('email').focus();return;}
+  try{await sendPasswordResetEmail(auth,email);toast('If the account exists, a password-reset email has been sent.');}
+  catch(error){toast(error.code==='auth/invalid-email'?'Please enter a valid email address.':'Could not send reset email. Please try again.');}
+};
+document.getElementById('accountBtn').onclick=async()=>{try{await signOut(auth);}catch(error){toast('Could not sign out. Please try again.')}};
+onAuthStateChanged(auth,user=>{if(user)showApp(user);else showLogin()});
+document.getElementById('scanBtn').onclick=()=>toast('Camera QR scanning is not connected yet.');
+document.getElementById('gpsBtn').onclick=()=>{if(!navigator.geolocation){document.getElementById('gpsStatus').textContent='Geolocation unavailable.';return}document.getElementById('gpsStatus').textContent='Checking device location…';navigator.geolocation.getCurrentPosition(p=>{document.getElementById('gpsStatus').textContent='Location received; church-distance validation is not configured.';toast('Device location received for preview only.')},()=>{document.getElementById('gpsStatus').textContent='Location permission denied or unavailable.';toast('Could not access device location.')},{enableHighAccuracy:true,timeout:10000})};
+document.getElementById('leaveBtn').onclick=()=>{document.getElementById('leaveResult').textContent='Preview only. Leave requests are not yet saved.';toast('Leave request preview created.')};
+document.getElementById('exportBtn').onclick=()=>{const csv='student_id,name,class,attendance\nDEMO-001,Sample Student,Class 1,Preview only\n';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='st-josephs-faith-demo.csv';a.click();URL.revokeObjectURL(a.href)};
+document.getElementById('certBtn').onclick=()=>{const name=(document.getElementById('certName').value.trim()||'Sample Student').replace(/[&<>"]/g,'');const title=(document.getElementById('certTitle').value.trim()||'Certificate of Achievement').replace(/[&<>"]/g,'');document.getElementById('certPreview').innerHTML=`<div class="certificate"><img src="./midalam-logo.png" alt="Crest"><h2>St. Joseph’s Faith</h2><h3>${title}</h3><p>This certificate is presented to</p><h2>${name}</h2><p>For achievement and participation</p><p class="small muted">Preview only · Not an official certificate</p><button onclick="window.print()">Print certificate</button></div>`};
+renderNav();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
