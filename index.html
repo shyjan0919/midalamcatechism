@@ -32,7 +32,7 @@
  <header class="top"><div class="brand"><img src="./midalam-logo.png" alt="St. Joseph's Faith crest"><div><strong>St. Joseph’s Faith</strong><small>St. Joseph’s Catechism · Midalam</small></div></div><button id="accountBtn">Account</button></header>
  <main class="layout">
   <div class="welcome"><div><h2 id="pageTitle">Dashboard</h2><p id="welcomeText">Learn in Faith. Grow in Christ.</p></div><span class="role" id="roleBadge">PREVIEW</span></div>
-  <div class="notice"><b>Early build:</b> Firebase email/password sign-in is connected. Role-based permissions and database features are not finished. Do not enter real student information until security rules and access controls are tested.</div>
+  <div class="notice"><b>Early build:</b> Firebase email/password sign-in is connected. Student records require the dedicated students Firestore rule before use. Do not enter real children’s information until the rules below are published and tested.</div>
   <nav class="nav" id="desktopNav"></nav>
   <section class="screen active" id="dashboard">
    <div class="stats"><div class="card"><div class="statlabel">Classes</div><div class="statnum">13</div><div class="small muted">Class 1–Class 13</div></div><div class="card"><div class="statlabel">Students</div><div class="statnum">400</div><div class="small muted">Planning estimate</div></div><div class="card"><div class="statlabel">Attendance</div><div class="statnum">—</div><div class="small muted">Connect database for live data</div></div></div>
@@ -55,7 +55,19 @@
    </div>
   </section>
   <section class="screen" id="attendance"><div class="card"><h3>QR attendance</h3><p class="small muted">The live version will scan unique student cards, validate teacher/class/session/location and prevent duplicate scans.</p><div class="formrow"><div><label>Class</label><select class="classSelect"></select></div><div><label>Session</label><select><option>Sunday Catechism</option><option>Special class</option></select></div></div><button class="full" id="scanBtn">Open scanner preview</button><button class="full secondary" id="gpsBtn">Check device location</button><p class="small muted" id="gpsStatus">Location not checked.</p></div></section>
-  <section class="screen" id="students"><div class="card"><h3>Student profiles & QR ID cards</h3><p class="small muted">Class-wise profiles, parent/guardian contacts, birthday, student ID and printable QR cards will be connected to Firestore.</p><label>Search student</label><input placeholder="Student name or ID"><label>Class</label><select class="classSelect"></select><div class="item"><b>Student profile preview</b><p class="small muted">Student ID · Name · Class · Parent contact · Birthday · QR ID card</p></div><p class="small muted">Use fictional data until database security has been tested.</p></div></section>
+  <section class="screen" id="students">
+   <div class="card"><h3>Student Registration</h3><p class="small muted">Register and maintain student profiles. Only administrator accounts can view or change student records.</p><p id="studentStatus" class="small muted">Checking administrator access…</p></div>
+   <div class="card"><h3 id="studentFormTitle">Register a student</h3><input id="studentEditId" type="hidden">
+    <label for="studentName">Student full name *</label><input id="studentName" maxlength="100" autocomplete="off" placeholder="Enter student full name">
+    <div class="formrow"><div><label for="studentDob">Date of birth</label><input id="studentDob" type="date"></div><div><label for="studentGender">Gender</label><select id="studentGender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Other</option></select></div></div>
+    <label for="studentClass">Class / group *</label><select id="studentClass"></select>
+    <label for="guardianName">Parent / guardian name</label><input id="guardianName" maxlength="100" placeholder="Parent or guardian full name">
+    <label for="guardianPhone">Parent / guardian mobile</label><input id="guardianPhone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10-digit mobile number">
+    <div class="actionrow"><button id="saveStudentBtn" type="button">Save student</button><button id="cancelStudentEditBtn" class="secondary hidden" type="button">Cancel edit</button></div>
+    <p class="small muted">Student ID is generated automatically. QR cards will be added in a later stage. Enter real children's information only after the Firestore security rules below have been published and tested.</p>
+   </div>
+   <div class="card"><h3>Registered students</h3><div class="formrow"><div><label for="studentSearch">Search students</label><input id="studentSearch" type="search" placeholder="Name, student ID, or parent"></div><div><label for="studentFilterClass">Filter by class</label><select id="studentFilterClass"><option value="">All classes / groups</option></select></div></div><p id="studentCount" class="small muted">0 students</p><div id="studentList" class="small muted">No student records loaded.</div></div>
+  </section>
   <section class="screen" id="teachers">
    <div class="card">
     <h3>Teacher Management</h3>
@@ -125,6 +137,7 @@ function compareClasses(a,b){
   return classOrder(an)-classOrder(bn) || an.localeCompare(bn);
 }
 document.querySelectorAll('.classSelect').forEach(s=>s.innerHTML=classNames.map(c=>`<option>${c}</option>`).join(''));
+for(const id of ['studentClass','studentFilterClass']){const el=document.getElementById(id);if(el){el.innerHTML=(id==='studentFilterClass'?'<option value="">All classes / groups</option>':'<option value="">Select class/group</option>')+classNames.map(c=>`<option value="${c}">${c}</option>`).join('')}}
 const navItems=[['dashboard','Home','⌂'],['attendance','Attendance','✓'],['students','Students','♙'],['leave','Leave','◷'],['reports','Reports','▤'],['certificates','Awards','✦'],['birthdays','Birthdays','♡'],['teachers','Teachers','♧'],['admin','Admin','⚙']];
 let currentScreen='dashboard';
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),4500)}
@@ -150,6 +163,7 @@ async function showApp(user){
       await loadClasses();
       await loadTeacherClasses();
       await loadTeachers();
+      await loadStudents();
     }
   } catch (error) {
     currentUserRole = "unassigned";
@@ -294,6 +308,104 @@ document.getElementById('saveTeacherBtn').addEventListener('click', async () => 
   }
 });
 
+let studentCache = [];
+function renderStudents(){
+  const list=document.getElementById('studentList');
+  const count=document.getElementById('studentCount');
+  if(!list||!count)return;
+  const term=(document.getElementById('studentSearch').value||'').trim().toLowerCase();
+  const selectedClass=document.getElementById('studentFilterClass').value;
+  const filtered=studentCache.filter(st=>{
+    const searchable=`${st.studentId||''} ${st.name||''} ${st.guardianName||''} ${st.guardianPhone||''} ${st.className||''}`.toLowerCase();
+    return (!term||searchable.includes(term))&&(!selectedClass||st.className===selectedClass);
+  }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  count.textContent=`${filtered.length} student${filtered.length===1?'':'s'}${term||selectedClass?' found':''}`;
+  list.innerHTML='';
+  if(!filtered.length){list.textContent=studentCache.length?'No students match your search/filter.':'No student records registered yet.';return;}
+  filtered.forEach(st=>{
+    const row=document.createElement('div');row.className='item';
+    const title=document.createElement('b');title.textContent=`${st.name||'Unnamed student'} · ${st.studentId||st.id}`;
+    const details=document.createElement('p');details.className='small muted';
+    const bits=[st.className,st.dateOfBirth?`DOB: ${st.dateOfBirth}`:'',st.gender||'',st.guardianName?`Parent: ${st.guardianName}`:'',st.guardianPhone||''].filter(Boolean);
+    details.textContent=bits.join(' · ');
+    const actions=document.createElement('div');actions.className='actionrow';actions.style.marginTop='8px';
+    const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Edit';edit.onclick=()=>editStudent(st);
+    const del=document.createElement('button');del.type='button';del.style.background='#9b2c2c';del.textContent='Delete';del.onclick=()=>deleteStudent(st);
+    actions.append(edit,del);row.append(title,details,actions);list.appendChild(row);
+  });
+}
+async function loadStudents(){
+  if(currentUserRole!=='admin')return;
+  const list=document.getElementById('studentList');
+  const status=document.getElementById('studentStatus');
+  list.textContent='Loading student records…';
+  try{
+    const snap=await getDocs(collection(db,'students'));
+    studentCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderStudents();
+    status.textContent='Administrator access verified. Student records can be registered, searched, edited, and deleted.';
+  }catch(error){
+    list.textContent='Could not load student records. Publish the students Firestore rule before using this section.';
+    status.textContent='Student records are blocked by current Firestore rules until the students rule is added.';
+    console.error('Load students failed:',error.code||error);
+  }
+}
+function resetStudentForm(){
+  document.getElementById('studentEditId').value='';
+  for(const id of ['studentName','studentDob','studentGender','guardianName','guardianPhone'])document.getElementById(id).value='';
+  document.getElementById('studentClass').value='';
+  document.getElementById('studentFormTitle').textContent='Register a student';
+  document.getElementById('saveStudentBtn').textContent='Save student';
+  document.getElementById('cancelStudentEditBtn').classList.add('hidden');
+}
+function editStudent(st){
+  if(currentUserRole!=='admin'){toast('Administrator permission is required.');return;}
+  document.getElementById('studentEditId').value=st.id;
+  document.getElementById('studentName').value=st.name||'';
+  document.getElementById('studentDob').value=st.dateOfBirth||'';
+  document.getElementById('studentGender').value=st.gender||'';
+  document.getElementById('studentClass').value=st.className||'';
+  document.getElementById('guardianName').value=st.guardianName||'';
+  document.getElementById('guardianPhone').value=st.guardianPhone||'';
+  document.getElementById('studentFormTitle').textContent='Edit student details';
+  document.getElementById('saveStudentBtn').textContent='Update student';
+  document.getElementById('cancelStudentEditBtn').classList.remove('hidden');
+  document.getElementById('studentName').focus();
+}
+async function deleteStudent(st){
+  if(currentUserRole!=='admin'||!auth.currentUser){toast('Administrator permission is required.');return;}
+  if(!confirm(`Delete the student record for ${st.name||st.studentId||'this student'}? This cannot be undone.`))return;
+  try{await deleteDoc(doc(db,'students',st.id));toast('Student record deleted.');await loadStudents();}
+  catch(error){toast('Could not delete student record. Check Firestore rules.');console.error('Delete student failed:',error.code||error);}
+}
+document.getElementById('saveStudentBtn').addEventListener('click',async()=>{
+  if(currentUserRole!=='admin'||!auth.currentUser){toast('Administrator permission is required.');return;}
+  const name=document.getElementById('studentName').value.trim();
+  const dateOfBirth=document.getElementById('studentDob').value;
+  const gender=document.getElementById('studentGender').value;
+  const className=document.getElementById('studentClass').value;
+  const guardianName=document.getElementById('guardianName').value.trim();
+  const guardianPhone=document.getElementById('guardianPhone').value.trim();
+  const editingId=document.getElementById('studentEditId').value;
+  if(!name||!className){toast('Enter the student name and select a class/group.');return;}
+  if(guardianPhone&&!/^\d{10}$/.test(guardianPhone)){toast('Parent/guardian mobile must contain exactly 10 digits.');return;}
+  const saveBtn=document.getElementById('saveStudentBtn');saveBtn.disabled=true;
+  try{
+    const id=editingId||`stu-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    const previous=studentCache.find(st=>st.id===editingId);
+    const studentId=previous?.studentId||`SJ-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    const classId=className.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const data={studentId,name,dateOfBirth,gender,className,classId,guardianName,guardianPhone,updatedAt:serverTimestamp(),updatedBy:auth.currentUser.uid};
+    if(!editingId){data.createdAt=serverTimestamp();data.createdBy=auth.currentUser.uid;}
+    await setDoc(doc(db,'students',id),data,{merge:true});
+    resetStudentForm();toast(editingId?'Student record updated.':'Student registered successfully.');await loadStudents();
+  }catch(error){toast('Could not save student. Check that the students Firestore rule is published.');console.error('Save student failed:',error.code||error);}
+  finally{saveBtn.disabled=false;}
+});
+document.getElementById('cancelStudentEditBtn').addEventListener('click',resetStudentForm);
+document.getElementById('studentSearch').addEventListener('input',renderStudents);
+document.getElementById('studentFilterClass').addEventListener('change',renderStudents);
+
 document.getElementById('saveClassBtn').addEventListener('click', async () => {
   if (currentUserRole !== 'admin' || !auth.currentUser) { toast('Administrator permission is required.'); return; }
   const name = document.getElementById('newClassName').value.trim();
@@ -312,8 +424,8 @@ document.getElementById('saveClassBtn').addEventListener('click', async () => {
     console.error('Save class failed:', error.code || error);
   }
 });
-function go(id){if((id==='admin' || id==='teachers') && currentUserRole!=='admin'){toast('Administrator permission is required.');id='dashboard'}currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
-function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>{b.onclick=()=>go(b.dataset.page);if((b.dataset.page==='admin' || b.dataset.page==='teachers') && currentUserRole!=='admin')b.classList.add('hidden')})}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
+function go(id){if((id==='admin' || id==='teachers' || id==='students') && currentUserRole!=='admin'){toast('Administrator permission is required.');id='dashboard'}currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
+function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>{b.onclick=()=>go(b.dataset.page);if((b.dataset.page==='admin' || b.dataset.page==='teachers' || b.dataset.page==='students') && currentUserRole!=='admin')b.classList.add('hidden')})}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
 
 document.getElementById('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
