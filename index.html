@@ -110,7 +110,18 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 let currentUserRole = "unassigned";
-const classNames=Array.from({length:13},(_,i)=>'Class '+(i+1));
+const classNames=[...Array.from({length:12},(_,i)=>'Class '+(i+1)),'College','Parents'];
+function classOrder(name){
+  const match=String(name||'').match(/^Class\s+(\d+)$/i);
+  if(match) return Number(match[1]);
+  if(String(name).trim().toLowerCase()==='college') return 13;
+  if(String(name).trim().toLowerCase()==='parents') return 14;
+  return 1000;
+}
+function compareClasses(a,b){
+  const an=a.data().name||a.id, bn=b.data().name||b.id;
+  return classOrder(an)-classOrder(bn) || an.localeCompare(bn);
+}
 document.querySelectorAll('.classSelect').forEach(s=>s.innerHTML=classNames.map(c=>`<option>${c}</option>`).join(''));
 const navItems=[['dashboard','Home','⌂'],['attendance','Attendance','✓'],['students','Students','♙'],['leave','Leave','◷'],['reports','Reports','▤'],['certificates','Awards','✦'],['birthdays','Birthdays','♡'],['teachers','Teachers','♧'],['admin','Admin','⚙']];
 let currentScreen='dashboard';
@@ -155,7 +166,7 @@ async function loadClasses(){
     const snap = await getDocs(collection(db, 'classes'));
     if (snap.empty) { list.textContent = 'No class records yet. You can create Class 1 through Class 13 below.'; return; }
     list.innerHTML = '';
-    snap.docs.sort((a,b)=>(a.data().name||'').localeCompare(b.data().name||'')).forEach(d => {
+    snap.docs.sort(compareClasses).forEach(d => {
       const row = document.createElement('div');
       row.className = 'item';
       const title = document.createElement('b'); title.textContent = d.data().name || d.id;
@@ -174,7 +185,7 @@ async function loadTeacherClasses(){
   select.innerHTML = '';
   try {
     const snap = await getDocs(collection(db, 'classes'));
-    const docs = snap.docs.sort((a,b)=>(a.data().name||'').localeCompare(b.data().name||''));
+    const docs = snap.docs.sort(compareClasses);
     docs.forEach(d => {
       const option = document.createElement('option');
       option.value = d.id;
