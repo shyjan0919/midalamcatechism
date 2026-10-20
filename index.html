@@ -223,7 +223,7 @@ document.getElementById('saveTeacherBtn').addEventListener('click', async () => 
   const classId = select.value;
   const className = select.options[select.selectedIndex]?.textContent || '';
   if (!name || !email || !classId) { toast('Enter teacher name, email, and class.'); return; }
-  const teacherId = email.replace(/[.#$\\[\\]\\/]/g, '_');
+  const teacherId = email.replace(/[.#$\/\[\]]/g, '_');
   try {
     await setDoc(doc(db, 'teachers', teacherId), {
       name, email, classId, className, active: true,
