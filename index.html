@@ -39,6 +39,21 @@
    <div class="card"><h3>Quick actions</h3><div class="actionrow"><button data-open="attendance">QR attendance</button><button class="secondary" data-open="students">Student profiles</button><button class="secondary" data-open="reports">Reports</button></div></div>
    <div class="card"><h3>Welcome to St. Joseph’s Faith</h3><p class="small muted">A digital home for catechism attendance, student records, teacher coordination, and parish activities.</p><div class="item"><b>Learn in Faith. Grow in Christ.</b><p class="small muted">St. Joseph’s Catechism · Midalam</p></div></div>
   </section>
+  <section class="screen" id="admin">
+   <div class="card">
+    <h3>Administrator setup</h3>
+    <p class="small muted">This screen is available only when Firestore confirms your account's admin role. The first admin role must be seeded manually in Firestore using your Firebase Authentication UID.</p>
+    <p id="adminRoleStatus" class="small">Checking administrator permissions…</p>
+   </div>
+   <div class="card">
+    <h3>Manage classes</h3>
+    <p class="small muted">Create or update the 13 catechism class records. This does not add students yet.</p>
+    <label>Class name</label><input id="newClassName" maxlength="60" placeholder="e.g. Class 1">
+    <label>Notes (optional)</label><input id="newClassNotes" maxlength="200" placeholder="Class teacher or notes">
+    <button class="full" id="saveClassBtn">Save class</button>
+    <div id="classList" class="small muted" style="margin-top:12px">No classes loaded.</div>
+   </div>
+  </section>
   <section class="screen" id="attendance"><div class="card"><h3>QR attendance</h3><p class="small muted">The live version will scan unique student cards, validate teacher/class/session/location and prevent duplicate scans.</p><div class="formrow"><div><label>Class</label><select class="classSelect"></select></div><div><label>Session</label><select><option>Sunday Catechism</option><option>Special class</option></select></div></div><button class="full" id="scanBtn">Open scanner preview</button><button class="full secondary" id="gpsBtn">Check device location</button><p class="small muted" id="gpsStatus">Location not checked.</p></div></section>
   <section class="screen" id="students"><div class="card"><h3>Student profiles & QR ID cards</h3><p class="small muted">Class-wise profiles, parent/guardian contacts, birthday, student ID and printable QR cards will be connected to Firestore.</p><label>Search student</label><input placeholder="Student name or ID"><label>Class</label><select class="classSelect"></select><div class="item"><b>Student profile preview</b><p class="small muted">Student ID · Name · Class · Parent contact · Birthday · QR ID card</p></div><p class="small muted">Use fictional data until database security has been tested.</p></div></section>
   <section class="screen" id="teachers"><div class="card"><h3>Teachers & class assignments</h3><p class="small muted">Admin will authorize teacher accounts and assign each teacher to a class. Teacher access will be restricted by Firestore security rules.</p><div class="item"><b>Administrator</b><p class="small muted">All-class administration</p></div><div class="item"><b>Teacher</b><p class="small muted">Assigned class only, with permitted aggregate reports</p></div></div></section>
@@ -60,6 +75,9 @@ import {
   signOut,
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, collection, getDocs, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA63biPdl_I_RuNJKTHBn7BjNLt6JEieTs",
@@ -72,15 +90,83 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+let currentUserRole = "unassigned";
 const classNames=Array.from({length:13},(_,i)=>'Class '+(i+1));
 document.querySelectorAll('.classSelect').forEach(s=>s.innerHTML=classNames.map(c=>`<option>${c}</option>`).join(''));
-const navItems=[['dashboard','Home','⌂'],['attendance','Attendance','✓'],['students','Students','♙'],['leave','Leave','◷'],['reports','Reports','▤'],['certificates','Awards','✦'],['birthdays','Birthdays','♡'],['teachers','Teachers','♧']];
+const navItems=[['dashboard','Home','⌂'],['attendance','Attendance','✓'],['students','Students','♙'],['leave','Leave','◷'],['reports','Reports','▤'],['certificates','Awards','✦'],['birthdays','Birthdays','♡'],['teachers','Teachers','♧'],['admin','Admin','⚙']];
 let currentScreen='dashboard';
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),4500)}
 function showLogin(){document.getElementById('loginScreen').classList.remove('hidden');document.getElementById('app').classList.add('hidden')}
-function showApp(user){document.getElementById('loginScreen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('roleBadge').textContent='SIGNED IN';document.getElementById('welcomeText').textContent=user?.email ? `Signed in as ${user.email}` : 'Welcome to St. Joseph’s Faith · Midalam';go('dashboard')}
-function go(id){currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
-function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.onclick=()=>go(b.dataset.page))}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
+async function showApp(user){
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('roleBadge').textContent='CHECKING ROLE';
+  document.getElementById('welcomeText').textContent=user?.email ? `Signed in as ${user.email}` : 'Welcome to St. Joseph’s Faith · Midalam';
+  currentUserRole = "unassigned";
+  try {
+    const roleSnap = await getDoc(doc(db, "users", user.uid));
+    currentUserRole = roleSnap.exists() ? (roleSnap.data().role || "unassigned") : "unassigned";
+    document.getElementById('roleBadge').textContent = currentUserRole.toUpperCase();
+    const adminNav = document.querySelectorAll('[data-page="admin"]');
+    adminNav.forEach(btn => btn.classList.toggle('hidden', currentUserRole !== 'admin'));
+    if (currentUserRole !== 'admin') {
+      document.getElementById('adminRoleStatus').textContent =
+        "No administrator role is assigned to this account yet. Ask the project owner to complete the one-time secure setup.";
+    } else {
+      document.getElementById('adminRoleStatus').textContent =
+        "Administrator role verified by Firestore. You can manage class records below.";
+      await loadClasses();
+    }
+  } catch (error) {
+    currentUserRole = "unassigned";
+    document.getElementById('roleBadge').textContent='ROLE UNAVAILABLE';
+    document.getElementById('adminRoleStatus').textContent =
+      "Could not read role information. Check that Firestore rules have been installed and your admin profile was created.";
+    console.error("Role lookup failed:", error.code || error);
+  }
+  go('dashboard');
+}
+async function loadClasses(){
+  if (currentUserRole !== 'admin') return;
+  const list = document.getElementById('classList');
+  list.textContent = 'Loading classes…';
+  try {
+    const snap = await getDocs(collection(db, 'classes'));
+    if (snap.empty) { list.textContent = 'No class records yet. You can create Class 1 through Class 13 below.'; return; }
+    list.innerHTML = '';
+    snap.docs.sort((a,b)=>(a.data().name||'').localeCompare(b.data().name||'')).forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'item';
+      const title = document.createElement('b'); title.textContent = d.data().name || d.id;
+      const notes = document.createElement('p'); notes.className='small muted'; notes.textContent=d.data().notes || 'No notes';
+      row.append(title, notes); list.appendChild(row);
+    });
+  } catch (error) {
+    list.textContent = 'Unable to load classes. Check Firestore rules.';
+    console.error('Load classes failed:', error.code || error);
+  }
+}
+document.getElementById('saveClassBtn').addEventListener('click', async () => {
+  if (currentUserRole !== 'admin' || !auth.currentUser) { toast('Administrator permission is required.'); return; }
+  const name = document.getElementById('newClassName').value.trim();
+  const notes = document.getElementById('newClassNotes').value.trim();
+  if (!name) { toast('Enter a class name first.'); return; }
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (!id) { toast('Please use a class name with letters or numbers.'); return; }
+  try {
+    await setDoc(doc(db, 'classes', id), { name, notes, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid }, { merge: true });
+    document.getElementById('newClassName').value='';
+    document.getElementById('newClassNotes').value='';
+    toast('Class saved successfully.');
+    await loadClasses();
+  } catch (error) {
+    toast('Could not save class. Check Firestore rules.');
+    console.error('Save class failed:', error.code || error);
+  }
+});
+function go(id){if(id==='admin' && currentUserRole!=='admin'){toast('Administrator permission is required.');id='dashboard'}currentScreen=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.getElementById('pageTitle').textContent=navItems.find(n=>n[0]===id)?.[1]||'Dashboard';renderNav()}
+function renderNav(){for(const navId of ['desktopNav','mobileNav']){const el=document.getElementById(navId);el.innerHTML=navItems.map(([id,label,icon])=>`<button data-page="${id}" class="${currentScreen===id?'active':''}">${icon} ${label}</button>`).join('');el.querySelectorAll('button').forEach(b=>{b.onclick=()=>go(b.dataset.page);if(b.dataset.page==='admin' && currentUserRole!=='admin')b.classList.add('hidden')})}document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>go(b.dataset.open))}
 
 document.getElementById('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
